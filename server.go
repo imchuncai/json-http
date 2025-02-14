@@ -302,6 +302,20 @@ func Success(data interface{}) Response {
 	return Response{Success: true, Data: data}
 }
 
+type FailCode interface {
+	Int() int
+	Message() string
+}
+
+// Fail generate fail response
+func Fail(code FailCode) Response {
+	return Response{Success: false, Msg: code.Message(), Code: code.Int()}
+}
+
+func FailWithMsg(code FailCode, msg string) Response {
+	return Response{Success: false, Msg: msg, Code: code.Int()}
+}
+
 // Forbidden panic a ErrorWithCode error
 func Forbidden(err error) {
 	panicWithHTTPCode(err, http.StatusForbidden)
