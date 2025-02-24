@@ -230,6 +230,10 @@ type RequestSSE struct {
 }
 
 func (req *RequestSSE) from(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
 	req.commonRequest.From(w, r)
 	req.Unmarshal = func(v interface{}) {
 		MustWithHTTPCode(params.Unpack(r, v), http.StatusBadRequest)
@@ -265,8 +269,8 @@ func (e ErrorWithCode) Error() string {
 type Response struct {
 	Success bool        `json:"success"`
 	Code    int         `json:"code"`
-	Msg     string      `json:"msg,omitempty"`
-	Data    interface{} `json:"data,omitempty"`
+	Msg     string      `json:"msg"`
+	Data    interface{} `json:"data"`
 }
 
 func (res Response) do(w http.ResponseWriter, r *http.Request) error {
@@ -316,7 +320,15 @@ func FailWithMsg(code FailCode, msg string) Response {
 	return Response{Success: false, Msg: msg, Code: code.Int()}
 }
 
+func FailWithHTTPCode(err error, httpStatusCode int) {
+	panicWithHTTPCode(err, http.StatusForbidden)
+}
+
 // Forbidden panic a ErrorWithCode error
 func Forbidden(err error) {
 	panicWithHTTPCode(err, http.StatusForbidden)
+}
+
+func BadRequest(err error) {
+	panicWithHTTPCode(err, http.StatusBadRequest)
 }
